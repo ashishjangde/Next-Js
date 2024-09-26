@@ -1,0 +1,65 @@
+{
+    "courses": [
+      {
+        "id": 1,
+        "title": "Guitar Fundamentals",
+        "slug": "guitar-fundamentals",
+        "description": "Learn the basics of playing guitar, including chords, strumming, and more.",
+        "price": 99.99,
+        "instructor": "John Doe",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      },
+      {
+        "id": 2,
+        "title": "Piano for Beginners",
+        "slug": "piano-for-beginners",
+        "description": "A beginner’s guide to playing the piano, covering scales, chords, and techniques.",
+        "price": 79.99,
+        "instructor": "Jane Smith",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      },
+      {
+        "id": 3,
+        "title": "Mastering Photography",
+        "slug": "mastering-photography",
+        "description": "Develop advanced photography skills, from framing to post-editing.",
+        "price": 149.99,
+        "instructor": "Alex Johnson",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      },
+      {
+        "id": 4,
+        "title": "Introduction to Coding",
+        "slug": "introduction-to-coding",
+        "description": "Learn the fundamentals of programming with hands-on coding exercises.",
+        "price": 49.99,
+        "instructor": "Chris Martin",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/577585/pexels-photo-577585.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      },
+      {
+        "id": 5,
+        "title": "Digital Marketing 101",
+        "slug": "digital-marketing-101",
+        "description": "Get started with digital marketing strategies and tools for growing your brand.",
+        "price": 129.99,
+        "instructor": "Linda Harris",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/265087/pexels-photo-265087.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      },
+      {
+        "id": 6,
+        "title": "Yoga for Stress Relief",
+        "slug": "yoga-for-stress-relief",
+        "description": "Learn yoga techniques to relax and de-stress your body and mind.",
+        "price": 59.99,
+        "instructor": "Emma Wilson",
+        "isFeatured": true,
+        "image": "https://images.pexels.com/photos/917732/pexels-photo-917732.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+      }
+    ]
+  }
+  
