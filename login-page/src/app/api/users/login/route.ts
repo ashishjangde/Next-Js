@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     try {
         const req = await request.json();
         const { email, password } = req;
-        const user = await Users.findOne({ email }).select("-password -forgotPasswordToken -forgotPasswordExpiry -verifyToken -verifyTokenExpiry");
+        const user = await Users.findOne({ email });
         if (!user) return NextResponse.json({ message: "User not found" }, { status: 400 });
 
         const isPasswordCorrect = await bcryptjs.compare(password, user.password);
@@ -20,14 +20,16 @@ export async function POST(request: NextRequest) {
 
         const token = await jwt.sign(
             {
-                id: user._id, username: user.username, email: user.email
+                _id: user._id, username: user.username, email: user.email
             },
                 process.env.JWT_TOKEN_SECRET!,
             {
                 expiresIn: "30d"
             });
 
-        const response = NextResponse.json({ user, message: "User logged in successfully" }, { status: 200 });
+            const existingUser = await Users.findOne({ email }).select("-password -forgotPasswordToken -forgotPasswordExpiry -verifyToken -verifyTokenExpiry");
+
+        const response = NextResponse.json({ existingUser, message: "User logged in successfully" }, { status: 200 });
 
         response.cookies.set("token", token, {
             httpOnly: true,
