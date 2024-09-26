@@ -5,7 +5,7 @@ import { NextResponse, NextRequest } from "next/server";
 connectDB();
 
 export async function GET(request: NextRequest) {
-    try {n 
+    try {
        const userId = await getDataFromToken(request);
 
         const user = await Users.findOne({ _id: userId }).select("-password -forgotPasswordToken -forgotPasswordExpiry -verifyToken -verifyTokenExpiry");
