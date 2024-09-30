@@ -4,18 +4,42 @@ import bcryptjs from "bcryptjs";
 import { sendVerificationEmail } from "@/helpers/sendverificationEmail";
 import { NextRequest } from "next/server";
 import { console } from "inspector";
+import z from 'zod'
+import { signupSchema } from "@/schemas/signUpSchema";
 
+
+const signUpQuerySchema = z.object({
+    username:signupSchema.shape.username,
+    email:signupSchema.shape.email,
+    password:signupSchema.shape.password
+});
 
 export async function POST(request: NextRequest) {
     await connectDB();
     try {
         const { email, username, password } = await request.json();
 
-        console.log(email, username, password);
-        //existing user check
+        // validate with zod
+        const result = signUpQuerySchema.safeParse({ email, username, password });
+        if (!result.success) {
+            const errorMessages = result.error.errors.map((err) => 
+                `${err.path.join('.')} : { ${err.message} }` 
+            );
+            return Response.json(
+                
+                {
+                    message: errorMessages,
+                    success: false,
+                    data: null
+                    
+                },
+                {
+                    status: 400
+                });
+        }
        const existingUserVerifiedByUsername = await User.findOne(
         { 
-        username,
+        username ,
         isVerified: true 
         })
 
@@ -93,12 +117,13 @@ export async function POST(request: NextRequest) {
                     data: existingUser
                 },
                 {
-                    status: 200
+                    status: 201
                 });
-        }else {
+        }
+        if(!emailResponse.success) {
             return Response.json(
                 {
-                    message: emailResponse.message,
+                    message: "Something went wrong in sending verification email",
                     success: false,
                     data: null
                 },
@@ -108,6 +133,7 @@ export async function POST(request: NextRequest) {
         }
 
     } catch (error : any) {
+        console.log(error);
         return Response.json(
             {
                 message: "Something went wrong in signing up",

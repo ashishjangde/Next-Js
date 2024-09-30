@@ -1,52 +1,50 @@
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import bcryptjs from "bcryptjs"
-import connectDB from "@/lib/dbConfig"
-import userModel from "@/models/user.model"
-
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import bcryptjs from "bcryptjs";
+import connectDB from "@/lib/dbConfig";
+import userModel from "@/models/user.model";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       id: "credentials",
       name: "Credentials",
-
       credentials: {
-        email: {
-          label: "Email",
-          type: "text",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-        },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: any): Promise<any> {
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
         await connectDB();
+
         try {
           const user = await userModel.findOne({
             $or: [
-              {
-                email: credentials?.identifier.email
-              },
-              {
-                username: credentials?.identifier.username
-              }
+              { email: credentials.email },
+              { username: credentials.email }
             ]
-          })
+          }).lean();
 
           if (!user) {
-            throw new Error("User not found with this email");
+            throw new Error("User not found");
           }
-          const checkPassword = await bcryptjs.compare(credentials?.password, user.password);
+          const stringPassword = credentials.password.toString();
+          const checkPassword = await bcryptjs.compare(stringPassword, user.password);
           if (!checkPassword) {
-            throw new Error("Password is incorrect");
+            throw new Error("Invalid password");
           }
 
-          return user
+          return{
+            ...user,
+            _id: user._id.toString(),
+          }
 
-        } catch (err: any) {
-          throw new Error(err)
+        } catch (err) {
+          console.error("Authentication error:", err);
+          return null;
         }
       }
     })
@@ -55,20 +53,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token._id = user._id?.toString(); // Convert ObjectId to string
+        token._id = user._id?.toString(); 
         token.isVerified = user.isVerified;
         token.isAcceptingMessages = user.isAcceptingMessages;
         token.username = user.username;
       }
-      return token
+      return token;
     },
 
     async session({ session, token }) {
       if (token) {
-        session.user._id = token._id
-        session.user.isVerified = token.isVerified
-        session.user.isAcceptingMessages = token.isAcceptingMessages
-        session.user.username = token.username
+        session.user._id = token._id;
+        session.user.isVerified = token.isVerified;
+        session.user.isAcceptingMessages = token.isAcceptingMessages;
+        session.user.username = token.username;
       }
       return session;
     }
@@ -79,8 +77,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   secret: process.env.NEXTAUTH_SECRET,
+
   pages: {
     signIn: '/sign-in',
   },
-
-})
+});

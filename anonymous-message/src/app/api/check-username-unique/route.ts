@@ -25,10 +25,11 @@ export async function GET (request: Request){
 
         
         if (existingVerifiedUser) {
-            return Response.json({ message: "Username already exists" , success: false }, { status: 500 });
+            return Response.json({ message: "Username already exists" , success: false }, { status: 400 });
         }
+
         if(!existingVerifiedUser) {
-            return Response.json({ message: "Username does not exist" , success: true }, { status: 200 });
+            return Response.json({ message: "Username Available" , success: true }, { status: 200 });
         }
 
     } catch (error) {

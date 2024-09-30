@@ -1,64 +1,97 @@
 import connectDB from "@/lib/dbConfig";
 import userModel from "@/models/user.model";
-import z from  'zod'
+import z from 'zod';
 import { verifySchema } from "@/schemas/verifySchema";
 
-
+// Validation schema for the incoming request
 const verifyQuerySchema = z.object({
-    verifyCode: verifySchema,
-})
+    username: z.string(),
+    code: z.string(),
+});
 
-export async function GET(request:Request) {
+export async function POST(request: Request) {
     await connectDB();
 
     try {
-        const {username, code } = await request.json();
+        const { username, code } = await request.json();
 
-        const decodedUsername = decodeURIComponent(username);
-        // validate with zod
-        const result = verifyQuerySchema.safeParse(code);
-        if(!result.success) { 
-            return Response.json({ message: result.error.format().verifyCode?._errors[0] , success: false }, { status: 400 });
+        console.log({ username, code });
+
+        // Validate the incoming request body
+        const result = verifyQuerySchema.safeParse({ username, code });
+        if (!result.success) {
+            return new Response(JSON.stringify({
+                message: result.error.format().code?._errors[0] || "Invalid data",
+                success: false
+            }), {
+                status: 400
+            });
         }
 
-        const { verifyCode } = result.data;
+        const { username: parsedUsername, code: parsedCode } = result.data;
 
-        const  stringCode = verifyCode.toString();
-
-        const existingUser = await userModel.findOne({ username: decodedUsername });
+        // Find the user in the database
+        const existingUser = await userModel.findOne({ username: parsedUsername });
         if (!existingUser) {
-            return Response.json({ message: "User not found", success: false }, { status: 404 });
+            return new Response(JSON.stringify({
+                message: "User not found",
+                success: false
+            }), {
+                status: 404
+            });
         }
 
+        // Check if user is already verified
         if (existingUser.isVerified) {
-            return Response.json({ message: "User already verified", success: false }, { status: 400 });
+            return new Response(JSON.stringify({
+                message: "User already verified",
+                success: false
+            }), {
+                status: 400
+            });
         }
 
-        if (existingUser.verifyCode !== stringCode) {
-            return Response.json({ message: "Invalid verification code", success: false }, { status: 400 });
+        // Compare the verification code
+        if (existingUser.verifyCode !== parsedCode) {
+            return new Response(JSON.stringify({
+                message: "Invalid verification code",
+                success: false
+            }), {
+                status: 400
+            });
         }
+
+        // Check if the code has expired
         const isCodeNotExpired = new Date(existingUser.verifyCodeExpiry) > new Date();
         if (!isCodeNotExpired) {
-            return Response.json({ message: "Verification code expired", success: false }, { status: 400 });
+            return new Response(JSON.stringify({
+                message: "Verification code expired",
+                success: false
+            }), {
+                status: 400
+            });
         }
 
+        // Mark the user as verified
         existingUser.isVerified = true;
-        existingUser.verifyCode = "";
+        existingUser.verifyCode = ""; 
         await existingUser.save();
 
-        return Response.json({ message: "User verified", success: true }, { status: 200 });
+        return new Response(JSON.stringify({
+            message: "User verified",
+            success: true
+        }), {
+            status: 200
+        });
 
     } catch (error) {
         console.log("Error in verifying code:", error);
-        
-        return Response.json(
-            {
-                message: "Something went wrong in verifying code",
-                success: false,
-                data: null
-            },
-            {
-                status: 500
-            });
+
+        return new Response(JSON.stringify({
+            message: "Something went wrong in verifying code",
+            success: false
+        }), {
+            status: 500
+        });
     }
 }

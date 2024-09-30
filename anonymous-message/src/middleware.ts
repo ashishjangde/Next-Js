@@ -6,7 +6,6 @@ import { getToken } from 'next-auth/jwt';
 export default  auth((request ) => {
 
   const token = request.auth || {}
-  console.log("token:", token);
   
 
   const { nextUrl } = request;
@@ -14,15 +13,12 @@ export default  auth((request ) => {
   // So if request.auth is truthy (i.e. not null, undefined, 0, etc.)
   // then !!request.auth will be true, otherwise it will be false
   const isLoggedIn = !!request.auth
-  const publicPaths = ['/sign-in', '/sign-up', '/verify']
+  const publicPaths = ['/sign-in', '/sign-up', '/verify',]
 
   if (isLoggedIn && publicPaths.includes(nextUrl.pathname)) {
     return NextResponse.redirect(new URL('/', nextUrl))
   }
 
-  if (!isLoggedIn && !publicPaths.includes(nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/sign-in', nextUrl))
-  }
 
   return NextResponse.next()
 })
