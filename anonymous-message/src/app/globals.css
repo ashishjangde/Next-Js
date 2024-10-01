@@ -80,3 +80,31 @@ body {
     @apply bg-background text-foreground;
   }
 }
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+
+
+/* Light Mode Styles */
+.input-underground {
+  @apply border-2 border-gray-200; /* Light gray border */
+  @apply shadow-inner transition-all duration-300 ease-in-out; /* Subtle inset shadow for depth */
+}
+
+.input-underground:focus {
+  @apply outline-none; /* Remove default outline */
+}
+
+
+
+
+/* Dark Mode Styles */
+.dark .input-underground {
+  @apply border-gray-800; /* Dark gray border */
+}
+
+.dark .input-underground:focus {
+  @apply outline-none; /* Remove default outline */
+}

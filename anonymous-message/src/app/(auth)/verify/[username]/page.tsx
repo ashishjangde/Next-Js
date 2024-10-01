@@ -7,7 +7,7 @@ import * as z from "zod"
 import { verifySchema } from "@/schemas/verifySchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
-import ApiResponse from "@/types/ApiResponse";
+import { ApiResponse } from "@/types/ApiResponse";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { InputOTP, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";

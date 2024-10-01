@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          return null;
         }
 
         await connectDB();
@@ -29,12 +29,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }).lean();
 
           if (!user) {
-            throw new Error("User not found");
+            return null;
           }
           const stringPassword = credentials.password.toString();
           const checkPassword = await bcryptjs.compare(stringPassword, user.password);
           if (!checkPassword) {
-            throw new Error("Invalid password");
+            return null;
           }
 
           return{
@@ -43,7 +43,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
         } catch (err) {
-          console.error("Authentication error:", err);
           return null;
         }
       }
@@ -70,6 +69,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     }
+  },
+
+  logger: {
+    error: (message) => {
+      //console.error(message.message);
+    },
   },
 
   session: {

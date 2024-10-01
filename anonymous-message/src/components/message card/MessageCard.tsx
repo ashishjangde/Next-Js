@@ -1,10 +1,10 @@
 'use client'
 
-import { X } from "lucide-react"
-import { Button } from "../ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
+import { X } from "lucide-react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardDescription } from "../ui/card";
 
-import {IMessage} from '@/models/message.model'
+import { IMessage } from '@/models/message.model';
 
 import {
     AlertDialog, AlertDialogAction,
@@ -15,57 +15,83 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
-import axios from "axios"
-import ApiResponse from "@/types/ApiResponse"
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import { ApiResponse } from "@/types/ApiResponse";
+import { useState } from "react";
 
 interface MessageCardProps {
-    message:IMessage
-    deleteMessage: (messageId: string) => void
+    message: IMessage;
+    deleteMessage: (messageId: string) => void;
 }
 
 const MessageCard = ({ message, deleteMessage }: MessageCardProps) => {
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
 
-    const {toast} = useToast();
+    const handleDeleteMessage = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.delete<ApiResponse>(`/api/delete-message/${message._id}`);
+            if (response.status === 200) {
+                toast({
+                    title: "Message Deleted",
+                    description: "The message has been successfully deleted.",
+                });
+                deleteMessage(message._id as string);
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to delete the message. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    const handelDeleteMessage = async () => {
-     const response = await  axios.delete<ApiResponse>(`/api/delete-message/${message._id}`)
+    // Format the createdAt date
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleString(); // Display date and time
+    };
 
-     if (response.status == 200) {
-        toast({
-            title: "Message Deleted",
-        })
-     }
-    deleteMessage(message._id)
-    }
-return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Card Title</CardTitle>
+    return (
+        <Card className="border border-gray-300 rounded-lg p-4 mb-4 relative">
+            <CardHeader className="flex justify-between items-start">
+                <CardDescription className="text-lg dark:text-white text-black">{message.content || "Message content goes here."}</CardDescription>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive"><X/></Button>
+                        <p
+                            className="absolute top-0.5 right-2 flex items-center justify-center w-5 h-5 rounded-full bg-red-600"
+                        >
+                            <X className="w-4 h-4 text-white" />
+                        </p>
+
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogTitle>Are you sure you want to delete this message?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your
-                                account and remove your data from our servers.
+                                This action cannot be undone. The message will be permanently deleted from our records.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handelDeleteMessage}>Continue</AlertDialogAction>
+                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeleteMessage} disabled={isLoading}>
+                                {isLoading ? "Deleting..." : "Continue"}
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-                <CardDescription>Card Description</CardDescription>
             </CardHeader>
+            <CardContent className="text-sm  mt-2">
+                Sent on: {formatDate(message.createdAt.toString())}
+            </CardContent>
         </Card>
-
-    )
+    );
 }
 
-export default MessageCard
+export default MessageCard;

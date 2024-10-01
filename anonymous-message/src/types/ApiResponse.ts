@@ -1,9 +1,8 @@
 import { IMessage } from "@/models/message.model";
 
-export default interface ApiResponse {
+export interface ApiResponse {
     success: boolean;
     message: string;
+    data: any
     isAcceptingMessages?: boolean;
-    messages?: IMessage[];
-
-}
+  };

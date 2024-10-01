@@ -69,7 +69,7 @@ const page = () => {
     <div className="absolute inset-0 dark:bg-black opacity-85 backdrop-blur-sm" />
     <div className="relative z-10 w-full max-w-md p-8 space-y-8 dark:bg-black/70 rounded-lg shadow-md backdrop-blur-md">
       <div className="text-center text-white">
-        <h1 className="text-3xl font-extrabold tracking-tight dark:text-white text-black lg:text-5xl mb-6">Join Our Anonymous Community</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight dark:text-white text-black lg:text-5xl mb-6"> Anonymous</h1>
         <p className="mb-4 dark:text-white text-black">Have fun with friends and get to know them anonymously.</p>
       </div>
         <Form {...form}>

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, model, Model } from "mongoose";
+import mongoose, { Schema, Document, model, Model , Types } from "mongoose";
 
 
 export interface IUser extends Document {
@@ -9,7 +9,7 @@ export interface IUser extends Document {
   verifyCodeExpiry: Date;
   isVerified: boolean;
   isAcceptingMessages: boolean;
-  messages: Schema.Types.ObjectId[];
+  messages: Types.ObjectId[];
 }
 
 // Define the User schema

@@ -5,7 +5,7 @@ import { User } from "next-auth";
 import { acceptMessageSchema } from "@/schemas/acceptMessageSchema";
 import mongoose from "mongoose";
 
-async function GET(request: Request) {
+export async function GET(request: Request) {
 
     await connectDB();
     const session = await auth()
@@ -40,7 +40,10 @@ async function GET(request: Request) {
               }
             },
             {
-              $unwind: "$messagesData" // Unwind the messagesData array
+              $unwind: {
+                path : "$messagesData",
+             preserveNullAndEmptyArrays: true} // Unwind the messagesData array
+              
             },
             {
               $sort: { "messagesData.createdAt": -1 } // Sort by createdAt in descending order
@@ -48,7 +51,7 @@ async function GET(request: Request) {
             {
               $group: {
                 _id: "$_id",
-                messages: { $push: "$messagesData" } // Group messages into an array again
+                messages: { $push: "$messagesData" } 
               }
             }
           ]);
@@ -65,7 +68,6 @@ async function GET(request: Request) {
                   }
               );
           }
-
           return Response.json(
               {
                   message: "User found",

@@ -1,19 +1,20 @@
-import { auth } from "@/auth"
-import connectDB from "@/lib/dbConfig"
+import { auth } from "@/auth";
+import connectDB from "@/lib/dbConfig";
 import userModel from "@/models/user.model";
 import { User } from "next-auth";
-import { acceptMessageSchema } from "@/schemas/acceptMessageSchema";
-import z from 'zod'
-
+import { acceptMessageSchema } from "@/schemas/acceptMessageSchema"; // If this is necessary
+import z from 'zod';
 
 const acceptQuerySchema = z.object({
-    acceptMessages: acceptMessageSchema
-})
+    acceptMessages: z.object({
+        isAcceptingMessages: z.boolean() // Ensure this matches your expected payload structure
+    })
+});
 
 export async function POST(request: Request) {
     await connectDB();
 
-    const session = await auth()
+    const session = await auth();
     if (!session) {
         return Response.json(
             {
@@ -27,19 +28,17 @@ export async function POST(request: Request) {
         );
     }
 
-    const user : User = session.user
-    const userId = user._id
-
-    
-
+    const user: User = session.user;
+    const userId = user._id;
 
     try {
-        const {isAcceptingMessages} = await request.json();
-        const result = acceptQuerySchema.safeParse(isAcceptingMessages);
+        const body = await request.json(); 
+        const result = acceptQuerySchema.safeParse(body); 
+
         if (!result.success) {
             return Response.json(
                 {
-                    message: result.error.format().acceptMessages?._errors[0],
+                    message: result.error.format().acceptMessages?._errors[0] || "Invalid request payload",
                     success: false,
                     data: null
                 },
@@ -49,10 +48,11 @@ export async function POST(request: Request) {
             );
         }
 
-        const { acceptMessages } = result.data;
+        const { isAcceptingMessages } = result.data.acceptMessages; // Access the correct nested property
+        console.log(isAcceptingMessages);
         const updatedUser = await userModel.findOneAndUpdate(
             { _id: userId },
-            { isAcceptingMessages: acceptMessages },
+            { isAcceptingMessages: isAcceptingMessages },
             { new: true }
         ).select("-password -verifyCode -verifyCodeExpiry -__v");
 
@@ -78,8 +78,9 @@ export async function POST(request: Request) {
             {
                 status: 200
             }
-        )
+        );
     } catch (error) {
+        console.error("Error processing request:", error); // Logging the error for debugging
         return Response.json(
             {
                 message: "Something went wrong in Accepting the messages POST",
@@ -93,11 +94,10 @@ export async function POST(request: Request) {
     }
 }
 
-
 export async function GET(request: Request) {
     await connectDB();
 
-    const session = await auth()
+    const session = await auth();
     if (!session) {
         return Response.json(
             {
@@ -111,8 +111,8 @@ export async function GET(request: Request) {
         );
     }
 
-    const user : User = session.user
-    const userId = user._id
+    const user: User = session.user;
+    const userId = user._id;
 
     try {
         const existingUser = await userModel.findOne({ _id: userId }).select("-password -verifyCode -verifyCodeExpiry -__v");
@@ -122,6 +122,9 @@ export async function GET(request: Request) {
                     message: "User not found",
                     success: false,
                     data: null
+                },
+                {
+                    status: 404
                 }
             );
         }
@@ -131,10 +134,14 @@ export async function GET(request: Request) {
                 message: "User fetched successfully",
                 success: true,
                 data: existingUser
+            },
+            {
+                status: 200
             }
-        )
+        );
     } catch (error) {
-          return Response.json(
+        console.error("Error processing request:", error); // Logging the error for debugging
+        return Response.json(
             {
                 message: "Something went wrong in Accepting the messages GET",
                 success: false,

@@ -1,7 +1,7 @@
-import mongoose, { Schema ,Document , model } from "mongoose";
+import mongoose, { Schema ,Document , model ,Types } from "mongoose";
 
 export interface IMessage extends Document {
-    _id : string,
+    _id: Types.ObjectId | string,
     content : string,
     createdAt: Date,
 }
