@@ -104,7 +104,7 @@ const page = () => {
              </FormItem>
            )}
            />
-           <Button type="submit" disabled={isSubmitting} className="w-full">
+           <Button type="submit" disabled={isSubmitting} variant={"custom"} className="w-full">
            {isSubmitting ? (
                   <Loader2 className=" animate-spin" />
               ) : (

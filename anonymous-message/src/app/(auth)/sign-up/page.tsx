@@ -148,7 +148,7 @@ const page = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+          <Button type="submit" disabled={isSubmitting} variant={"custom"} className="w-full">
             {isSubmitting ? (
               <Loader2 className="animate-spin" />
             ) : (

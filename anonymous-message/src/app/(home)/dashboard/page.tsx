@@ -145,7 +145,7 @@ const DashBoard = () => {
                         disabled
                         className="input input-bordered w-full p-2 mr-2"
                     />
-                    <Button onClick={copyToClipboard}>Copy</Button>
+                    <Button onClick={copyToClipboard} variant="custom">Copy</Button>
                 </div>
             </div>
 

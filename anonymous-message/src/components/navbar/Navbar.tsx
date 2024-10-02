@@ -31,13 +31,16 @@ const Navbar = () => {
           <div className="text-xl font-bold">Anonymous</div>
         </Link>
 
-        <div className="flex space-x-6 items-center">
+        <div className="hidden md:flex space-x-6 items-center">
           <Link href={'/'} >
             Home
           </Link>
-          <Link href={'/dashboard'} >
-            Dashboard
-          </Link>
+          {status === 'authenticated' ? (
+             <Link href={'/dashboard'} >
+             Dashboard
+           </Link>
+          ): null}
+         
           <Link href={'/about'} >
             About
           </Link>
@@ -70,7 +73,7 @@ const Navbar = () => {
             </Button>
           ) : (
             <Link href={'/sign-in'}>
-              <Button variant="default">Sign In</Button>
+              <Button variant="custom">Sign In</Button>
             </Link>
           )}
         </div>

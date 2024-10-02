@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-
+import dynamic from "next/dynamic";
 interface ConnectionType {
   isConnected?: number; // 1 means connected, 0 means disconnected
 }
 
 const connection: ConnectionType = {};
+
 
 const connectDB = async (): Promise<void> => {
   if (connection.isConnected) {

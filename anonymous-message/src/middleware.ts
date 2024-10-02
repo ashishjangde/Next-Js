@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 import {auth} from './auth'
-import { getToken } from 'next-auth/jwt';
+
 
  
 export default  auth((request ) => {
 
-  const token = request.auth || {}
   
 
   const { nextUrl } = request;
