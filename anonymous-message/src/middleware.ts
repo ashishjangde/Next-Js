@@ -9,9 +9,6 @@ export default  auth((request ) => {
 
   const isLoggedIn = !!request.auth
   const publicPaths = ['/sign-in', '/sign-up', '/verify',]
-  if (!isLoggedIn && !publicPaths.includes(nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/sign-in', nextUrl))
-  }
 
   if (isLoggedIn && publicPaths.includes(nextUrl.pathname)) {
     return NextResponse.redirect(new URL('/', nextUrl))
