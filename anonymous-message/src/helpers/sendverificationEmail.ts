@@ -24,12 +24,14 @@ export async function sendVerificationEmail({
         return {
             success: true,
             message: "Verification email sent",
+            data: null
         }
     } catch (error) {
         console.error("Error in sending verification email:", error);
         return {
             success: false,
             message: "Error in sending verification email",
+            data: null
         }
 
     }

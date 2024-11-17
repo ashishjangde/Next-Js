@@ -8,9 +8,7 @@ export default  auth((request ) => {
   
 
   const { nextUrl } = request;
-  // !! is a double NOT operator, it converts the value to a boolean
-  // So if request.auth is truthy (i.e. not null, undefined, 0, etc.)
-  // then !!request.auth will be true, otherwise it will be false
+
   const isLoggedIn = !!request.auth
   const publicPaths = ['/sign-in', '/sign-up', '/verify',]
 

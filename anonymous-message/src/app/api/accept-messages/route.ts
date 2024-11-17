@@ -1,9 +1,9 @@
 import { auth } from "@/auth";
-import connectDB from "@/lib/dbConfig";
-import userModel from "@/models/user.model";
+import { PrismaClient } from "@prisma/client";
 import { User } from "next-auth";
-import { acceptMessageSchema } from "@/schemas/acceptMessageSchema"; // If this is necessary
 import z from 'zod';
+
+const prisma = new PrismaClient();
 
 const acceptQuerySchema = z.object({
     acceptMessages: z.object({
@@ -12,8 +12,6 @@ const acceptQuerySchema = z.object({
 });
 
 export async function POST(request: Request) {
-    await connectDB();
-
     const session = await auth();
     if (!session) {
         return Response.json(
@@ -29,13 +27,19 @@ export async function POST(request: Request) {
     }
 
     const user: User = session.user;
-    const userId = user._id;
+    if (!user.id) {
+        return Response.json(
+            { message: "User ID not found", success: false, data: null },
+            { status: 400 }
+        );
+    }
 
     try {
-        const body = await request.json(); 
-        const result = acceptQuerySchema.safeParse(body); 
+        const body = await request.json();
+        const result = acceptQuerySchema.safeParse(body);
 
         if (!result.success) {
+            console.error("Zod Validation Error:", result.error.format());
             return Response.json(
                 {
                     message: result.error.format().acceptMessages?._errors[0] || "Invalid request payload",
@@ -48,26 +52,18 @@ export async function POST(request: Request) {
             );
         }
 
-        const { isAcceptingMessages } = result.data.acceptMessages; // Access the correct nested property
+        const { isAcceptingMessages } = result.data.acceptMessages;
         console.log(isAcceptingMessages);
-        const updatedUser = await userModel.findOneAndUpdate(
-            { _id: userId },
-            { isAcceptingMessages: isAcceptingMessages },
-            { new: true }
-        ).select("-password -verifyCode -verifyCodeExpiry -__v");
 
-        if (!updatedUser) {
-            return Response.json(
-                {
-                    message: "User not found",
-                    success: false,
-                    data: null
-                },
-                {
-                    status: 404
-                }
-            );
-        }
+        // Update user using Prisma
+        const updatedUser = await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                isAcceptingMessages: isAcceptingMessages
+            }
+        });
 
         return Response.json(
             {
@@ -80,7 +76,7 @@ export async function POST(request: Request) {
             }
         );
     } catch (error) {
-        console.error("Error processing request:", error); // Logging the error for debugging
+        console.error("Error processing request:", error);
         return Response.json(
             {
                 message: "Something went wrong in Accepting the messages POST",
@@ -94,9 +90,7 @@ export async function POST(request: Request) {
     }
 }
 
-export async function GET(request: Request) {
-    await connectDB();
-
+export async function GET() {
     const session = await auth();
     if (!session) {
         return Response.json(
@@ -112,11 +106,28 @@ export async function GET(request: Request) {
     }
 
     const user: User = session.user;
-    const userId = user._id;
+    if (!user.id) {
+        return Response.json(
+            { message: "User ID not found", success: false, data: null },
+            { status: 400 }
+        );
+    }
 
     try {
-        const existingUser = await userModel.findOne({ _id: userId }).select("-password -verifyCode -verifyCodeExpiry -__v");
+        const existingUser = await prisma.user.findUnique({
+            where: {
+                id: user.id
+            },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                isAcceptingMessages: true
+            }
+        });
+
         if (!existingUser) {
+            console.error(`User with ID ${user.id} not found`);
             return Response.json(
                 {
                     message: "User not found",
@@ -140,7 +151,7 @@ export async function GET(request: Request) {
             }
         );
     } catch (error) {
-        console.error("Error processing request:", error); // Logging the error for debugging
+        console.error("Error processing request:", error);
         return Response.json(
             {
                 message: "Something went wrong in Accepting the messages GET",

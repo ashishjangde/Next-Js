@@ -1,10 +1,9 @@
 'use client'
 
 import { X } from "lucide-react";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardDescription } from "../ui/card";
 
-import { IMessage } from '@/models/message.model';
+import { Message as IMessage } from "@prisma/client";
 
 import {
     AlertDialog, AlertDialogAction,
@@ -17,8 +16,8 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
-import { ApiResponse } from "@/types/ApiResponse";
+import axios, { AxiosError } from "axios";
+import  ApiResponse  from "@/types/ApiResponse";
 import { useState } from "react";
 
 interface MessageCardProps {
@@ -33,20 +32,22 @@ const MessageCard = ({ message, deleteMessage }: MessageCardProps) => {
     const handleDeleteMessage = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.delete<ApiResponse>(`/api/delete-message/${message._id}`);
+            const response = await axios.delete<ApiResponse>(`/api/delete-message/${message.id}`);
             if (response.status === 200) {
                 toast({
                     title: "Message Deleted",
                     description: "The message has been successfully deleted.",
                 });
-                deleteMessage(message._id as string);
+                deleteMessage(message.id as string);
             }
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "Failed to delete the message. Please try again.",
-                variant: "destructive",
-            });
+            if (error instanceof AxiosError) {
+                toast({
+                    title: "Error",
+                    description: error.response?.data.message ?? "Failed to delete the message. Please try again.",
+                    variant: "destructive",
+                });
+            }
         } finally {
             setIsLoading(false);
         }

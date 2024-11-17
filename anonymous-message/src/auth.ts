@@ -1,8 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcryptjs from "bcryptjs";
-import connectDB from "@/lib/dbConfig";
-import userModel from "@/models/user.model";
+import prisma from "@/lib/dbConfig";  // Assuming this is the Prisma client
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -18,31 +17,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        await connectDB();
-
         try {
-          const user = await userModel.findOne({
-            $or: [
-              { email: credentials.email },
-              { username: credentials.email }
-            ]
-          }).lean();
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: credentials.email },
+                { username: credentials.email },
+              ]
+            }
+          });
 
           if (!user) {
             return null;
           }
+
           const stringPassword = credentials.password.toString();
           const checkPassword = await bcryptjs.compare(stringPassword, user.password);
           if (!checkPassword) {
             return null;
           }
 
-          return{
+          return {
             ...user,
-            _id: user._id.toString(),
-          }
+            id: user.id.toString(), 
+          };
 
         } catch (err) {
+          console.error(err);
           return null;
         }
       }
@@ -52,7 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token._id = user._id?.toString(); 
+        token.id = user.id; 
         token.isVerified = user.isVerified;
         token.isAcceptingMessages = user.isAcceptingMessages;
         token.username = user.username;
@@ -62,7 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       if (token) {
-        session.user._id = token._id;
+        session.user.id = token.id;
         session.user.isVerified = token.isVerified;
         session.user.isAcceptingMessages = token.isAcceptingMessages;
         session.user.username = token.username;
@@ -72,8 +73,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   logger: {
-    error: (message) => {
-      //console.error(message.message);
+    error: () => {
+      // console.error(message);
     },
   },
 

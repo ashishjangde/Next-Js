@@ -11,7 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { messageSchema } from "@/schemas/messageSchema";
 import axios, { AxiosError } from "axios";
-import { ApiResponse } from "@/types/ApiResponse";
+import  ApiResponse  from "@/types/ApiResponse";
 import { useState } from "react";
 
 // Additional schema for optional fields
@@ -73,7 +73,7 @@ export default function Home() {
             <FormField
               control={form.control}
               name="message"
-              render={({ field }) => (
+              render={() => (
                 <FormItem className="w-full lg:w-2/3">
                   <Input
                     type="text"

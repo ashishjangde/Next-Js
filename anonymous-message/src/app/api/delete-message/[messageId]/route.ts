@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import userModel from "@/models/user.model";
-import messageModel from "@/models/message.model";
-import connectDB from "@/lib/dbConfig";
-import { auth } from "@/auth";
-
-
+import prisma from "@/lib/dbConfig";  
+import { auth } from "@/auth";  
 
 export async function DELETE(request: Request, { params }: { params: { messageId: string } }) {
-    await connectDB();
   const session = await auth();
 
   if (!session || !session.user) {
@@ -22,7 +17,7 @@ export async function DELETE(request: Request, { params }: { params: { messageId
   }
 
   const { user } = session;
-  const userId = user?._id;  
+  const userId = user?.id;
 
   if (!userId) {
     return NextResponse.json(
@@ -49,7 +44,17 @@ export async function DELETE(request: Request, { params }: { params: { messageId
   }
 
   try {
-    const existingUser = await userModel.findOne({ _id: userId }).select("-password -verifyCode -verifyCodeExpiry -__v");
+    // Query the user from the database using Prisma
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: userId,  
+      },
+      select: {
+        id: true,
+        username: true,
+        isVerified: true,
+      },
+    });
 
     if (!existingUser) {
       return NextResponse.json(
@@ -62,7 +67,13 @@ export async function DELETE(request: Request, { params }: { params: { messageId
       );
     }
 
-    const existingMessage = await messageModel.findOne({ _id: messageId });
+ 
+    const existingMessage = await prisma.message.findUnique({
+      where: {
+        id: messageId,
+      },
+    });
+
     if (!existingMessage) {
       return NextResponse.json(
         {
@@ -74,7 +85,11 @@ export async function DELETE(request: Request, { params }: { params: { messageId
       );
     }
 
-    await messageModel.deleteOne({ _id: messageId });
+    await prisma.message.delete({
+      where: {
+        id: messageId,
+      },
+    });
 
     return NextResponse.json(
       {

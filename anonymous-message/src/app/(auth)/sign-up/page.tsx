@@ -9,7 +9,7 @@ import { use, useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import axios, { AxiosError } from "axios"
-import {ApiResponse} from "@/types/ApiResponse"
+import ApiResponse from "@/types/ApiResponse"
 import { signupSchema } from "@/schemas/signUpSchema"
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2} from "lucide-react" 
 
 
-const page = () => {
+export default function Page () {
   const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [usernameMessage, setUsernameMessage] = useState('');
@@ -170,4 +170,3 @@ const page = () => {
   )
 }
 
-export default page

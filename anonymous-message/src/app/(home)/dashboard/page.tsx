@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
-import { IMessage } from '@/models/message.model'
+import { Message as IMessage } from '@prisma/client'
 import { acceptMessageSchema } from '@/schemas/acceptMessageSchema'
-import { ApiResponse } from '@/types/ApiResponse'
+import  ApiResponse  from '@/types/ApiResponse'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios, { AxiosError } from 'axios'
 import { Loader2, RefreshCcw } from 'lucide-react'
@@ -22,7 +22,7 @@ const DashBoard = () => {
     const { toast } = useToast();
 
     const handleDeleteMessage = (messageId: string) => {
-        setMessages(messages.filter((message) => message._id !== messageId));
+        setMessages(messages.filter((message) => message.id !== messageId));
     }
 
     const { data: session } = useSession();
@@ -127,10 +127,7 @@ const DashBoard = () => {
         });
     }
 
-    const formatUsername = (name: string) => {
-        if (!name) return '';
-        return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-    };
+
 
     return (
         <div className="my-20 mx-4 md:mx-8 lg:mx-auto p-6  rounded w-full max-w-6xl">
@@ -180,7 +177,7 @@ const DashBoard = () => {
                 {messages.length > 0 ? (
                     messages.map((message) => (
                         <MessageCard
-                            key={message._id as string}
+                            key={message.id as string}
                             message={message}
                             deleteMessage={handleDeleteMessage} // Corrected the prop name here
                         />

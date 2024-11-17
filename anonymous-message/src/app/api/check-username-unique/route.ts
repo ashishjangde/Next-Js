@@ -1,39 +1,67 @@
-import connectDB from "@/lib/dbConfig";
-import z from 'zod'
-import userModel from "@/models/user.model";
-import { usernameValidationSchema } from "@/schemas/signUpSchema";
+import prisma from '@/lib/dbConfig';
+import z from 'zod';
+import { usernameValidationSchema } from '@/schemas/signUpSchema';
 
+// Indicate this is a dynamic route
+export const dynamic = 'force-dynamic';
+
+// Zod schema for validating query params
 const usernameQuerySchema = z.object({
-    username: usernameValidationSchema
-})
+    username: usernameValidationSchema,
+});
 
-export async function GET (request: Request){
-    await connectDB();
+export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const queryparams = {
-            username: searchParams.get('username')
-        }
-        // validate with zod
-        const result = usernameQuerySchema.safeParse(queryparams);
-        console.log(result); // todo remove console log
+        const username = searchParams.get('username');
+
+        // Validate query parameters with Zod schema
+        const result = usernameQuerySchema.safeParse({ username });
+
         if (!result.success) {
-            return Response.json({ message: result.error.format().username?._errors[0] , success: false }, { status: 400 });
-        }
-        const { username } = result.data;
-        const existingVerifiedUser = await userModel.findOne({ username , isVerified: true });
-
-        
-        if (existingVerifiedUser) {
-            return Response.json({ message: "Username already exists" , success: false }, { status: 400 });
+            return Response.json({
+                message: result.error.format().username?._errors[0],
+                success: false,
+            }, { status: 400 });
         }
 
-        if(!existingVerifiedUser) {
-            return Response.json({ message: "Username Available" , success: true }, { status: 200 });
+        const { username: validatedUsername } = result.data;
+
+        // Check if username exists in the database
+        const existingUser = await prisma.user.findUnique({
+            where: {
+                username: validatedUsername,
+            },
+            select: {
+                id: true,
+                isVerified: true,
+            },
+        });
+
+        // Handle logic based on username availability
+        if (existingUser) {
+            const message = existingUser.isVerified
+                ? 'Username already exists'
+                : 'Username exists but is not verified';
+
+            return Response.json({
+                message,
+                success: false,
+            }, { status: 400 });
         }
+
+        // If no existing user is found
+        return Response.json({
+            message: 'Username Available',
+            success: true,
+        }, { status: 200 });
 
     } catch (error) {
-        console.log(`Error in check-username-unique: ${error}`);
-        return Response.json({ message: "Something went wrong In Checking Username Unique" , success: false }, { status: 500 });
+        console.error('Error in check-username-unique:', error);
+        
+        return Response.json({
+            message: 'Something went wrong in Checking Username Unique',
+            success: false,
+        }, { status: 500 });
     }
 }

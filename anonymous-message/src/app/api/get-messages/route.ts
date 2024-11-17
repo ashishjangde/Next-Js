@@ -1,14 +1,10 @@
-import { auth } from "@/auth"
-import connectDB from "@/lib/dbConfig"
-import userModel from "@/models/user.model";
-import { User } from "next-auth";
-import { acceptMessageSchema } from "@/schemas/acceptMessageSchema";
-import mongoose from "mongoose";
+import { auth } from "@/auth";
+import prisma from "@/lib/dbConfig";  
+import { User } from "next-auth";  
 
 export async function GET(request: Request) {
+    const session = await auth();
 
-    await connectDB();
-    const session = await auth()
     if (!session) {
         return Response.json(
             {
@@ -16,78 +12,67 @@ export async function GET(request: Request) {
                 success: false,
                 data: null
             },
-            {
-                status: 401
-            }
+            { status: 401 }
         );
     }
 
-    const user: User = session.user
-    const userId = new mongoose.Types.ObjectId(user._id)
+    const user: User = session.user;
+    const userId = user.id;
 
-    try {
-        const user = await userModel.aggregate([
-            {
-              $match: { _id: userId }
-            },
-            {
-              // Lookup to fetch the actual messages data
-              $lookup: {
-                from: "messages", // The name of the messages collection
-                localField: "messages",
-                foreignField: "_id",
-                as: "messagesData"
-              }
-            },
-            {
-              $unwind: {
-                path : "$messagesData",
-             preserveNullAndEmptyArrays: true} // Unwind the messagesData array
-              
-            },
-            {
-              $sort: { "messagesData.createdAt": -1 } // Sort by createdAt in descending order
-            },
-            {
-              $group: {
-                _id: "$_id",
-                messages: { $push: "$messagesData" } 
-              }
-            }
-          ]);
-
-          if(!user || user.length === 0) {
-              return Response.json(
-                  {
-                      message: "User not found",
-                      success: false,
-                      data: null
-                  },
-                  {
-                      status: 404
-                  }
-              );
-          }
-          return Response.json(
-              {
-                  message: "User found",
-                  success: true,
-                  data: user[0].messages
-              },
-              {
-                  status: 200
-              }
-          );
-    } catch (error) {
+    if (!userId) {
         return Response.json(
             {
-                message: "Something went wrong in Accepting the messages POST",
+                message: "User ID not found",
                 success: false,
                 data: null
             },
-            {
-                status: 500
+            { status: 401 }
+        );
+    }
+
+    try {
+        // Fetch the user and include related messages, sorted by createdAt
+        const userWithMessages = await prisma.user.findUnique({
+            where: {
+                id: userId, 
+            },
+            include: {
+                messages: {
+                    orderBy: {
+                        createdAt: 'desc'  
+                    }
+                }
             }
+        });
+
+        if (!userWithMessages) {
+            return Response.json(
+                {
+                    message: "User not found",
+                    success: false,
+                    data: null
+                },
+                { status: 404 }
+            );
+        }
+
+        return Response.json(
+            {
+                message: "User found",
+                success: true,
+                data: userWithMessages.messages 
+            },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("Error in GET request:", error);
+        return Response.json(
+            {
+                message: "Something went wrong while fetching messages",
+                success: false,
+                data: null
+            },
+            { status: 500 }
         );
     }
 }

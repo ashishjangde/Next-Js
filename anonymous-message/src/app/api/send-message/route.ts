@@ -1,46 +1,56 @@
-import messageModel from "@/models/message.model";
-import userModel from "@/models/user.model";
-import connectDB from "@/lib/dbConfig";
-
-
+import prisma from "@/lib/dbConfig";  // Prisma client
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-    await connectDB();
     try {
-        const { username, content } = await request.json();
-        const user = await userModel.findOne({ username });
-       
-        if (!user) {
-            return Response.json({ message: "User not found", success: false }, { status: 404 });
-        }
      
-        if (!user.isAcceptingMessages) {
-            return Response.json({ message: "User is not accepting messages", success: false }, { status: 400 });
+        const { username, content } = await request.json();
+
+      
+        const user = await prisma.user.findUnique({
+            where: { username },
+        });
+
+        if (!user) {
+            return NextResponse.json({ message: "User not found", success: false }, { status: 404 });
         }
 
-        const message = await messageModel.create({
-            content,
-            createdAt: new Date()
-        });
-        console.log({ message }); 
-        user.messages.push(message._id as any);
+      
+        if (!user.isAcceptingMessages) {
+            return NextResponse.json({ message: "User is not accepting messages", success: false }, { status: 400 });
+        }
 
-       
-        const users = await user.save();
-        console.log({ users });
-        return Response.json({ message: "Message sent successfully", success: true, data: message }, { status: 200 });
+        
+        const message = await prisma.message.create({
+            data: {
+                content,
+                createdAt: new Date(),
+                user: { connect: { username } },
+            },
+        });
+
+     
+        await prisma.user.update({
+            where: { username },
+            data: {
+                messages: {
+                    connect: { id: message.id }, 
+                },
+            },
+        });
+
+   
+        return NextResponse.json({ message: "Message sent successfully", success: true, data: message }, { status: 200 });
 
     } catch (error) {
-        return Response.json(
+        console.error("Error in sending message:", error);
+        return NextResponse.json(
             {
                 message: "Something went wrong in Sending Message",
                 success: false,
-                data: null
+                data: null,
             },
-            {
-                status: 500
-            }
+            { status: 500 }
         );
     }
-
 }
